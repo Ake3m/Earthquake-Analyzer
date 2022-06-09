@@ -9,6 +9,7 @@ from selenium import webdriver
 import matplotlib.pyplot as plt
 import time
 from bs4 import BeautifulSoup
+from selenium.webdriver.common.keys import Keys
 
 #GLOBAL VARIABLES
 DRIVER_PATH = './/chromedriver.exe' #Please change this to the path of your chrome driver
@@ -121,11 +122,19 @@ def parseDetails(details):
 def queryMonth():
     year = input('Please enter a year: ')
     month=input('Please enter the month: ')
+    search_query = month+'-'+year
+    print(search_query)
     headless_option=webdriver.ChromeOptions()
     headless_option.add_argument('headless')
     browser=webdriver.Chrome(executable_path=DRIVER_PATH, options=headless_option)
     browser.get(QUERY_URL)
-
+    search_field = browser.find_element_by_id('Search')
+    search_field.clear()
+    time.sleep(1)
+    search_field.send_keys(search_query)
+    time.sleep(2)
+    search_field.send_keys(Keys.RETURN)
+    time.sleep(1)
     test=pd.read_html(browser.page_source)[1]
     print(test)
     

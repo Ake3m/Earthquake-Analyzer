@@ -89,7 +89,7 @@ def viewInfo(parsed_df, title):
     plt.ylabel("Number of Earthquakes")
     plt.title("{} earthquake Count in Taiwan by magnitude".format(title))
     fig.tight_layout()
-    plt.savefig('410821332_test.jpg', dpi=100)
+    plt.savefig('earthquake_{}.jpg'.format(title), dpi=100)
     plt.close()
 
 def fetchInformation():
@@ -197,7 +197,7 @@ def queryMonth():
     data = getQueryInformation(search_query)
     parsed_data=parseQueryDetails(data)
     print(parsed_data)
-    viewInfo(parsed_data,search_query.replace('-','/'))
+    viewInfo(parsed_data,search_query)
     
 if __name__=='__main__':
     main()

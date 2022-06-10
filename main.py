@@ -35,17 +35,14 @@ def main():
             print("Out of bounds.")
         else:
             if choice==0:
-                viewRecent(parsed_df)
+                viewInfo(parsed_df)
             elif choice==1:
                 queryMonth()
             elif choice==2:
                 break
 
-
-
-
-
-def viewRecent(parsed_df):
+#function that is used to plot the information that it is given
+def viewInfo(parsed_df, title):
     print(parsed_df)
     labels=parsed_df['Date'].to_list()
     magnitudes=parsed_df['Magnitude'].to_list()
@@ -58,25 +55,25 @@ def viewRecent(parsed_df):
 
     #plt section
     fig=plt.figure(num=1, figsize=(10,8))
-    fig.suptitle('Taiwan Recent Earthquake Summary')
+    fig.suptitle('Taiwan {} Earthquake Summary'.format(title))
     plt.subplot(221)
     plt.bar(np.arange(len(names)),values, tick_label=names)
     plt.xlabel('County')
     plt.ylabel("Number of Earthquakes")
     plt.xticks(rotation=300)
-    plt.title("Earthquakes Count in Taiwan by County")
+    plt.title("{} earthquake Count in Taiwan by County".format(title))
     plt.subplot(222)
     plt.plot(x,magnitudes)
     plt.xlabel('Date')
     plt.ylabel("Magnitude")
     plt.xticks(x,labels,rotation=90)
-    plt.title("Magnitudes of recent earthquakes in Taiwan")
+    plt.title("Magnitudes of {} earthquakes in Taiwan".format(title))
     plt.subplot(223)
     plt.plot(x,depth)
     plt.xlabel('Date')
     plt.ylabel("Depth (KM)")
     plt.xticks(x,labels,rotation=90)
-    plt.title("Depth of recent earthquakes in Taiwan")
+    plt.title("Depth of {} earthquakes in Taiwan".format(title))
     fig.tight_layout()
     plt.savefig('410821332_test.jpg', dpi=100)
 
@@ -119,7 +116,49 @@ def parseDetails(details):
     new_df=pd.DataFrame(reconstructed_details)
     return new_df
 
-def queryMonth():
+def separateLocation(location_list):
+    returned_locations = []
+    for location in location_list: 
+        parts=location.split()
+        returned_locations.append(parts[7]+' '+parts[8])
+    
+    return returned_locations
+
+def separateDateAndTime(date_time_info):
+    times=[]
+    dates=[]
+    for date_time in date_time_info:
+        parts=date_time.split()
+        dates.append(parts[0].replace('-','/'))
+        times.append(parts[1])
+    print(dates)
+    print(times)
+
+    return dates, times
+
+def parseQueryDetails(details):
+    magnitudes=details['ML'].to_list()
+    depth_list = details['Depth'].to_list()
+    location_information = details['Location']
+    date_time_info= details['GMT+8(Taiwan)']
+    locations=separateLocation(location_information)
+    dates,times=separateDateAndTime(date_time_info)
+    dates.reverse()
+    times.reverse()
+    locations.reverse()
+    magnitudes.reverse()
+    depth_list.reverse()
+    reconstructed_details={
+        "Location":locations,
+        "Date":dates,
+        "Time":times,
+        "Depth":depth_list,
+        "Magnitude":magnitudes
+    }
+    new_df=pd.DataFrame(reconstructed_details)
+    return new_df
+
+def getQueryInformation():
     year = input('Please enter a year: ')
     month=input('Please enter the month: ')
     search_query = month+'-'+year
@@ -132,11 +171,18 @@ def queryMonth():
     search_field.clear()
     time.sleep(1)
     search_field.send_keys(search_query)
-    time.sleep(2)
+    time.sleep(1)
     search_field.send_keys(Keys.RETURN)
     time.sleep(1)
-    test=pd.read_html(browser.page_source)[1]
-    print(test)
+    data=pd.read_html(browser.page_source)[1]
+
+    return data
+
+def queryMonth():
+    data = getQueryInformation()
+    parsed_data=parseQueryDetails(data)
+    print(parsed_data)
+    viewInfo(parsed_data)
     
 if __name__=='__main__':
     main()

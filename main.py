@@ -1,6 +1,7 @@
 #Name: Akeem Peters
 #Student ID: 410821332
 #Data Science Final Project
+from cv2 import sort
 import pandas as pd
 import numpy as np
 from parso import parse
@@ -35,7 +36,7 @@ def main():
             print("Out of bounds.")
         else:
             if choice==0:
-                viewInfo(parsed_df)
+                viewInfo(parsed_df,'Recent')
             elif choice==1:
                 queryMonth()
             elif choice==2:
@@ -49,9 +50,17 @@ def viewInfo(parsed_df, title):
     depth=parsed_df['Depth'].to_list()
     x=np.arange(len(labels))
     by_county=parsed_df['Location'].value_counts()
+    print(by_county)
     by_county=by_county.to_dict()
     names=list(by_county.keys())
     values=list(by_county.values())
+    #magnitudes
+    by_magnitude = parsed_df['Magnitude'].astype('int32').value_counts()
+    by_magnitude = by_magnitude.to_dict()
+    by_magnitude=dict(sorted(by_magnitude.items()))
+    print(by_magnitude)
+    magnitude_category = list(by_magnitude.keys())
+    magnitude_count=list(by_magnitude.values())
 
     #plt section
     fig=plt.figure(num=1, figsize=(10,8))
@@ -74,8 +83,14 @@ def viewInfo(parsed_df, title):
     plt.ylabel("Depth (KM)")
     plt.xticks(x,labels,rotation=90)
     plt.title("Depth of {} earthquakes in Taiwan".format(title))
+    plt.subplot(224)
+    plt.bar(np.arange(len(magnitude_category)),magnitude_count, tick_label=magnitude_category)
+    plt.xlabel('Magnitudes')
+    plt.ylabel("Number of Earthquakes")
+    plt.title("{} earthquake Count in Taiwan by magnitude".format(title))
     fig.tight_layout()
     plt.savefig('410821332_test.jpg', dpi=100)
+    plt.close()
 
 def fetchInformation():
     headless_option=webdriver.ChromeOptions()
@@ -158,11 +173,8 @@ def parseQueryDetails(details):
     new_df=pd.DataFrame(reconstructed_details)
     return new_df
 
-def getQueryInformation():
-    year = input('Please enter a year: ')
-    month=input('Please enter the month: ')
-    search_query = month+'-'+year
-    print(search_query)
+def getQueryInformation(search_query):
+    
     headless_option=webdriver.ChromeOptions()
     headless_option.add_argument('headless')
     browser=webdriver.Chrome(executable_path=DRIVER_PATH, options=headless_option)
@@ -179,10 +191,13 @@ def getQueryInformation():
     return data
 
 def queryMonth():
-    data = getQueryInformation()
+    year = input('Please enter a year: ')
+    month=input('Please enter the month: ')
+    search_query = month+'-'+year
+    data = getQueryInformation(search_query)
     parsed_data=parseQueryDetails(data)
     print(parsed_data)
-    viewInfo(parsed_data)
+    viewInfo(parsed_data,search_query.replace('-','/'))
     
 if __name__=='__main__':
     main()

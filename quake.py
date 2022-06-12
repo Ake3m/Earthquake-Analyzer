@@ -9,7 +9,13 @@ import matplotlib.pyplot as plt
 import time
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
-
+import tkinter as tk
+from tkinter import PhotoImage, ttk
+from ctypes import windll
+from datetime import datetime
+from tkinter.font import BOLD, Font
+from PIL import Image, ImageTk
+windll.shcore.SetProcessDpiAwareness(1)
 #GLOBAL VARIABLES
 DRIVER_PATH = './/chromedriver.exe' #Please change this to the path of your chrome driver
 URL="https://www.cwb.gov.tw/V8/E/E/index.html"
@@ -18,28 +24,45 @@ page_source=""
 #TEMPORARY COMMAND-LINE-INPUT. TKINTER WILL BE ADDED LATER
 
 def main():
-    options=['View recent Data','Query a specific month', 'Exit']
+
     df=fetchInformation() #function call to fetch the information from the website
-    # print(df)
     details=df['Details'].to_list() #gets the details column as a list to be split
     parsed_df=parseDetails(details) #function call to parse the details
-    # print(parsed_df)
-    print("Welcome to the Taiwan Earthquake Analysis system.")
-    while True:
-        print("What would you like to do?")
-        for i, option in enumerate(options):
-            print(i+1,option)
-        choice=int(input())-1
-        if choice>len(options)-1:
-            print("Out of bounds.")
-        else:
-            if choice==0:
-                viewInfo(parsed_df,'Recent')
-            elif choice==1:
-                queryMonth()
-            elif choice==2:
-                break
+    #GUI Section
+    mainWindow = tk.Tk()
+    mainWindow.title('Taiwan Earthquake Analysis system')
+    window_width = 1280
+    window_height = 800
+    screen_width = mainWindow.winfo_screenwidth()
+    screen_height = mainWindow.winfo_screenheight()
 
+    center_x = int(screen_width/2 - window_width /2)
+    center_y = int(screen_height/2 - window_height /2)
+    
+    title=ttk.Label(mainWindow,text='Taiwan Earthquake Analysis System',font=Font(mainWindow,size=25,weight=BOLD))
+    title.pack(pady=25)
+    img=ImageTk.PhotoImage(Image.open('./assets/taiwan.png').resize((100,150)))
+    img_label=ttk.Label(mainWindow,image=img).pack()
+    tag=ttk.Label(mainWindow, text='Recent earthquakes in Taiwan (Updated on: {})'.format(datetime.today().strftime('%Y-%m-%d %H:%M:%S')))
+    tag.pack()
+    table_columns = list(parsed_df.columns)
+    recent_table=ttk.Treeview(mainWindow, columns=table_columns)
+    recent_table.pack()
+
+    for col in table_columns:
+        recent_table.column(col, anchor="w")
+        recent_table.heading(col, text=col, anchor='w')
+    
+    for index, row in parsed_df.iterrows():
+        recent_table.insert("",0, text=index, values=list(row))
+
+    view_recent_info = ttk.Button(mainWindow, text='Recent Earthquake Analysis', command=lambda: viewInfo(parsed_df,'Recent'))
+    view_recent_info.pack(pady=10,ipadx=50, ipady=25)
+    query_button = ttk.Button(mainWindow,text='Query Specific Date',command=queryMonth)
+    query_button.pack(ipadx=50, ipady=25)
+    mainWindow.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+    mainWindow.mainloop()
+   
 #function that is used to plot the information that it is given
 def viewInfo(parsed_df, title):
     print(parsed_df)
@@ -88,7 +111,10 @@ def viewInfo(parsed_df, title):
     plt.title("{} earthquake Count in Taiwan by magnitude".format(title))
     fig.tight_layout()
     plt.savefig('earthquake_{}.jpg'.format(title), dpi=100)
-    plt.close()
+
+
+    # plt.close()
+    plt.show()
 
 def fetchInformation():
     headless_option=webdriver.ChromeOptions()

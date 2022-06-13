@@ -1,4 +1,4 @@
-#Taiwan Earthquake Analysis System (TEAS)
+# Taiwan Earthquake Analysis System (TEAS)
 
 ## Prerequisites
 In order to use this program, please ensure that the following are installed:
@@ -9,7 +9,7 @@ In order to use this program, please ensure that the following are installed:
 - [PIL](https://pypi.org/project/Pillow/)
 - [Chrome web driver](https://chromedriver.chromium.org/downloads) Download the appropriate version.
 
-### Introduction
+## Introduction
 
 Taiwan Earthquake Analysis System(TEAS) is a python based webcrawling app that utilizes [Selenium](https://www.selenium.dev/documentation/), [Pandas](https://pandas.pydata.org/), [Matplotlib](https://matplotlib.org/) and [Tkinter](https://docs.python.org/3/library/tkinter.html) in order to display and plot Taiwan earthquake information.
 TEAS pulls its information from the following Central Weather Bureau (CWB) websites
@@ -28,7 +28,7 @@ TEAS pulls its information from the following Central Weather Bureau (CWB) websi
 
 
  ## Notes:
- Contact Information: akeemp13@gmail.com
- Purpose: Created for Data Science final project
+ - Contact Information: akeemp13@gmail.com
+ - Purpose: Created for Data Science final project
 
 

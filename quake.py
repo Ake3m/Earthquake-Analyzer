@@ -1,6 +1,7 @@
 #Name: Akeem Peters
 #Student ID: 410821332
 #Data Science Final Project
+from threading import local
 from cv2 import sort
 import pandas as pd
 import numpy as np
@@ -22,17 +23,29 @@ URL="https://www.cwb.gov.tw/V8/E/E/index.html"
 QUERY_URL="https://scweb.cwb.gov.tw/en-us/earthquake/data/"
 page_source=""
 #TEMPORARY COMMAND-LINE-INPUT. TKINTER WILL BE ADDED LATER
+recent_table=""
+parsed_df=""
+local_copy=""
+title_text=""
+tag=""
 
 def main():
-
+    global recent_table
+    global parsed_df
+    global local_copy
+    global title_text
+    global tag
+    title_text='Recent'
     df=fetchInformation() #function call to fetch the information from the website
     details=df['Details'].to_list() #gets the details column as a list to be split
     parsed_df=parseDetails(details) #function call to parse the details
+    local_copy=parsed_df.copy()
+
     #GUI Section
     mainWindow = tk.Tk()
     mainWindow.title('Taiwan Earthquake Analysis system')
     window_width = 1280
-    window_height = 800
+    window_height = 950
     screen_width = mainWindow.winfo_screenwidth()
     screen_height = mainWindow.winfo_screenheight()
 
@@ -43,7 +56,7 @@ def main():
     title.pack(pady=25)
     img=ImageTk.PhotoImage(Image.open('./assets/taiwan.png').resize((100,150)))
     img_label=ttk.Label(mainWindow,image=img).pack()
-    tag=ttk.Label(mainWindow, text='Recent earthquakes in Taiwan (Updated on: {})'.format(datetime.today().strftime('%Y-%m-%d %H:%M:%S')))
+    tag=ttk.Label(mainWindow, text='{} earthquakes in Taiwan (Updated on: {})'.format(title_text,datetime.today().strftime('%Y-%m-%d %H:%M:%S')))
     tag.pack()
     table_columns = list(parsed_df.columns)
     recent_table=ttk.Treeview(mainWindow, columns=table_columns)
@@ -56,15 +69,60 @@ def main():
     for index, row in parsed_df.iterrows():
         recent_table.insert("",0, text=index, values=list(row))
 
-    view_recent_info = ttk.Button(mainWindow, text='Recent Earthquake Analysis', command=lambda: viewInfo(parsed_df,'Recent'))
+    view_recent_info = ttk.Button(mainWindow, text='Earthquake Analysis', command=lambda: viewInfo(parsed_df))
     view_recent_info.pack(pady=10,ipadx=50, ipady=25)
-    query_button = ttk.Button(mainWindow,text='Query Specific Date',command=queryMonth)
-    query_button.pack(ipadx=50, ipady=25)
+    note=ttk.Label(mainWindow, text='Please note: All Earthquake Analysis plots are automaticallt saved in the Analysis folder.')
+    note.pack()
+    sep=ttk.Separator(mainWindow,orient='horizontal')
+    sep.pack(fill='x')
+    search_text=ttk.Label(mainWindow,text='Search',font=Font(mainWindow, size=15, weight=BOLD))
+    search_text.pack()
+    explanation=ttk.Label(mainWindow, text='Example: Month: 3, Year: 2021 will give results for 3/2021')
+    explanation.pack()
+    month_label=ttk.Label(mainWindow,text='Enter month')
+    month_label.pack()
+    month=tk.StringVar()
+    month_entry=ttk.Entry(mainWindow, textvariable=month)
+    month_entry.pack()
+    year_label=ttk.Label(mainWindow,text='Enter Year')
+    year_label.pack()
+    year=tk.StringVar()
+    year_entry= ttk.Entry(mainWindow,textvariable=year)
+    year_entry.pack()
+    query_button = ttk.Button(mainWindow,text='Query',command=lambda:queryMonth(year.get(),month.get()))
+    query_button.pack(pady=5,ipadx=25, ipady=5)
+    reset_button = ttk.Button(mainWindow,text='Reset table', command=resetView)
+    reset_button.pack(pady=20,ipadx=25, ipady=5)
+
+
     mainWindow.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
     mainWindow.mainloop()
-   
+
+
+def resetView():
+    global parsed_df
+    global local_copy
+    global recent_table
+    global title_text
+    global tag
+
+    
+
+    title_text='Recent'
+
+    for i in recent_table.get_children():
+        recent_table.delete(i)
+    
+    for index, row in local_copy.iterrows():
+        recent_table.insert("",0, text=index, values=list(row))
+    
+    parsed_df=local_copy.copy()
+    tag.config(text='{} earthquakes in Taiwan (Updated on: {})'.format(title_text,datetime.today().strftime('%Y-%m-%d %H:%M:%S')))
+
 #function that is used to plot the information that it is given
-def viewInfo(parsed_df, title):
+def viewInfo(parsed_df):
+    global title_text
+    title=title_text
     print(parsed_df)
     labels=parsed_df['Date'].to_list()
     magnitudes=parsed_df['Magnitude'].to_list()
@@ -91,7 +149,7 @@ def viewInfo(parsed_df, title):
     plt.xlabel('County')
     plt.ylabel("Number of Earthquakes")
     plt.xticks(rotation=300)
-    plt.title("{} earthquake Count in Taiwan by County".format(title))
+    plt.title("{}Earthquake count in Taiwan by County".format(title))
     plt.subplot(222)
     plt.plot(x,magnitudes)
     plt.xlabel('Date')
@@ -108,9 +166,13 @@ def viewInfo(parsed_df, title):
     plt.bar(np.arange(len(magnitude_category)),magnitude_count, tick_label=magnitude_category)
     plt.xlabel('Magnitudes')
     plt.ylabel("Number of Earthquakes")
-    plt.title("{} earthquake Count in Taiwan by magnitude".format(title))
+    plt.title("{} Earthquake count in Taiwan by magnitude".format(title))
     fig.tight_layout()
-    plt.savefig('earthquake_{}.jpg'.format(title), dpi=100)
+    save_title=title
+    if '/' in save_title:
+        save_title=save_title.replace('/','-')
+
+    plt.savefig('./Analysis/earthquake_{}.jpg'.format(save_title), dpi=100)
 
 
     # plt.close()
@@ -213,15 +275,58 @@ def getQueryInformation(search_query):
     data=pd.read_html(browser.page_source)[1]
 
     return data
+def getInput():
+    qmwindow=tk.Tk()
+    qmwindow.title("Query Window")
+    window_width = 200
+    window_height = 200
+    screen_width = qmwindow.winfo_screenwidth()
+    screen_height = qmwindow.winfo_screenheight()
 
-def queryMonth():
-    year = input('Please enter a year: ')
-    month=input('Please enter the month: ')
+    center_x = int(screen_width/2 - window_width /2)
+    center_y = int(screen_height/2 - window_height /2)
+    qmwindow.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+    year=tk.StringVar()
+    month = tk.StringVar()
+    month_label=ttk.Label(qmwindow, text='Enter Month')
+    month_label.pack()
+    month_entry=ttk.Entry(qmwindow, textvariable=month)
+    month_entry.pack()
+    year_label=ttk.Label(qmwindow, text='Enter Year')
+    year_label.pack()
+    year_entry=ttk.Entry(qmwindow, textvariable=year)
+    year_entry.pack()
+    query_button = ttk.Button(qmwindow, text='Query',command=lambda:queryMonth(year.get(),month.get()))
+    query_button.pack()
+
+    qmwindow.mainloop()
+
+
+def queryMonth(year, month):
+    global recent_table
+    global parsed_df
+    global title_text
+    global tag
+    # year = input('Please enter a year: ')
+    # month=input('Please enter the month: ')
     search_query = month+'-'+year
+    title_text=search_query.replace('-','/')
+    # print(search_query)
     data = getQueryInformation(search_query)
     parsed_data=parseQueryDetails(data)
-    print(parsed_data)
-    viewInfo(parsed_data,search_query)
+    # print(parsed_data)
+    for i in recent_table.get_children():
+        recent_table.delete(i)
+    for index, row in parsed_data.iterrows():
+        recent_table.insert("",0, text=index, values=list(row))
+    
+    parsed_df=parsed_data.copy()
+    tag.config(text='{} earthquakes in Taiwan (Updated on: {})'.format(title_text,datetime.today().strftime('%Y-%m-%d %H:%M:%S')))
+    # viewInfo(parsed_data,search_query)
+
+    #GUI for month query
+    # query_window = tk.Tk()
+
     
 if __name__=='__main__':
     main()

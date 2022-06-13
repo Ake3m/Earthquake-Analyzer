@@ -24,6 +24,8 @@ TEAS pulls its information from the following Central Weather Bureau (CWB) websi
 ## Screenshots
 ![main](https://user-images.githubusercontent.com/25711110/173297036-0b6325a3-2269-44ad-8dc9-3e724c30d7b7.png)
 ![analysis](https://user-images.githubusercontent.com/25711110/173297218-6907543f-2de3-491e-bdab-7efd0d1ba0ac.png)
+![search_example](https://user-images.githubusercontent.com/25711110/173409515-600e8d2b-84a3-4f76-8cf1-f74e147e87fe.png)
+![earthquake_5-2016](https://user-images.githubusercontent.com/25711110/173409664-b564c298-ac1b-4cdf-9e6a-8c4ca020bc8a.jpg)
  
 
 

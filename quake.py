@@ -149,7 +149,7 @@ def viewInfo(parsed_df):
     plt.xlabel('County')
     plt.ylabel("Number of Earthquakes")
     plt.xticks(rotation=300)
-    plt.title("{}Earthquake count in Taiwan by County".format(title))
+    plt.title("{} Earthquake count in Taiwan by County".format(title))
     plt.subplot(222)
     plt.plot(x,magnitudes)
     plt.xlabel('Date')
